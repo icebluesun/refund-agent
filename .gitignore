@@ -1,0 +1,17 @@
+﻿# Deny everything by default
+*
+
+# Then explicitly allow only specific files
+!*.py
+!*.md
+!*.txt
+!*.toml
+!.gitignore
+!.env.example
+
+# Deny sensitive files even if they match allowed patterns
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
