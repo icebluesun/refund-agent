@@ -1,4 +1,4 @@
-# Loopp AI Agent Challenge – Original Requirements
+# AI Agent Challenge – Original Requirements
 
 ## Objective
 Build a fully functional web application: **An AI Customer Support Agent** that processes or denies e‑commerce refunds using an LLM (Gemini) to generate boilerplate code, system architecture, and datasets.

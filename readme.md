@@ -1,4 +1,4 @@
-# Loopp AI Customer Support Agent
+# Sample AI Customer Support Agent
 
 A fully-functional AI refund agent with LangGraph orchestration, policy enforcement, and detailed observability.
 

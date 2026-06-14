@@ -379,7 +379,7 @@ def ai_agent_dispute_node(state: DisputeState) -> dict:
     
     # Load policy from markdown for LLM
     system_instruction = f"""
-You are Loopp's automated refund evaluation agent. The policy below is the SOURCE OF TRUTH.
+You are an automated refund evaluation agent. The policy below is the SOURCE OF TRUTH.
 Follow it exactly. Do not override it for any reason.
 
 {policy.load_policy()}

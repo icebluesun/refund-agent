@@ -10,7 +10,7 @@ from main import execute_purchase, execute_dispute_evaluation
 from datetime import datetime
 import re
 
-st.set_page_config(page_title="Loopp AI Refund Agent", layout="wide")
+st.set_page_config(page_title="Sample AI Refund Agent", layout="wide")
 
 db.initialize_demo_state()
 
@@ -35,7 +35,7 @@ def get_default_chat_context():
         "purchase_quantity": 0
     }
 
-st.sidebar.title("🤖 Loopp Refund System")
+st.sidebar.title("🤖 Sample Refund System")
 
 # Customer selector for chat
 st.sidebar.subheader("Chat Customer")
@@ -166,7 +166,7 @@ def process_chat_message(user_message: str, customer_id: str) -> dict:
         inventory_summary = get_customer_inventory_summary(customer_id)
         products_summary = get_available_products_summary()
         return {
-            "response": f"Hello! I'm Loopp's AI shopping and refund assistant.\n\n**Your current inventory:**\n{inventory_summary}\n\n**Available products to buy:**\n{products_summary}\n\nWhat would you like to do? (e.g., 'buy keyboard', 'refund chair', or 'show my items')",
+            "response": f"Hello! I'm an AI shopping and refund assistant.\n\n**Your current inventory:**\n{inventory_summary}\n\n**Available products to buy:**\n{products_summary}\n\nWhat would you like to do? (e.g., 'buy keyboard', 'refund chair', or 'show my items')",
             "should_process": False,
             "reasoning": f"Greeting detected. Showing inventory and available products."
         }

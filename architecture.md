@@ -1,4 +1,4 @@
-Loopp Refund Agent – Architecture & Code Explanation
+Sample Refund Agent – Architecture & Code Explanation
 
 OVERVIEW
 The application is a full-stack AI refund assistant built with:

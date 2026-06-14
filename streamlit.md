@@ -1,4 +1,4 @@
-Deploying Loopp Refund Agent to Streamlit Cloud
+Deploying Sample Refund Agent to Streamlit Cloud
 
 PREREQUISITES
 - A GitHub account

@@ -1,4 +1,4 @@
-# Loopp Refund Policy (v2.0)
+# Sample Refund Policy (v2.0)
 
 ## 1. Core Principles
 - The written policy is the SOURCE OF TRUTH. No verbal or written plea overrides it.
