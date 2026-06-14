@@ -8,6 +8,7 @@
 !*.toml
 !.gitignore
 !.env.example
+!documents
 
 # Deny sensitive files even if they match allowed patterns
 .env

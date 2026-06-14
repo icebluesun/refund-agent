@@ -1,0 +1,125 @@
+Production-Ready Architecture Design Document
+Refund Agent – Loopp Challenge
+
+1. STATE PERSISTENCE & CHECKPOINTING
+
+PROTOTYPE (Current):
+- Uses st.session_state for ephemeral in-memory storage
+- Resets on server restart or browser refresh
+- Suitable for demo and development only
+
+PRODUCTION ARCHITECTURE:
+LangGraph Checkpointer Integration
+- SQLite for development (local state persistence across restarts)
+- PostgreSQL for production (shared state across multiple replicas)
+
+Implementation Pattern:
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.postgres import PostgresSaver
+
+# Dev
+checkpointer = SqliteSaver.from_conn_string("checkpoints.db")
+
+# Production
+checkpointer = PostgresSaver.from_conn_string(
+    "postgresql://user:pass@localhost/refund_agent"
+)
+
+# Apply to graph
+graph = workflow.compile(checkpointer=checkpointer)
+
+Benefits:
+- Survives process restarts – no lost customer sessions
+- Enables time-travel debugging (replay any state)
+- Supports human-in-the-loop interruption and resumption
+- Scales horizontally with database replication
+
+2. OBSERVABILITY STRATEGY
+
+LangSmith Integration for Production Monitoring
+
+Metrics to Track:
+| Metric | Purpose | Alert Threshold |
+|--------|---------|-----------------|
+| Latency per node | Identify slow LLM calls | >5 seconds |
+| Token cost per run | Budget control | >$0.10 per request |
+| Tool call success rate | Detect broken tools | <95% |
+| Human escalation rate | Policy effectiveness | >10% of requests |
+| Retry frequency | API health | >20% of calls |
+
+Implementation:
+from langsmith import Client
+from langgraph.graph import StateGraph
+
+# Enable tracing
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "ls__..."
+
+# Custom metrics callback
+class MetricsCallback:
+    def on_chain_end(self, outputs, **kwargs):
+        latency = time.time() - start_time
+        token_usage = outputs.get("token_usage", {})
+        # Send to Datadog / Prometheus / CloudWatch
+        send_metric("agent.latency", latency)
+        send_metric("agent.tokens", token_usage["total_tokens"])
+
+Dashboard Views:
+- Real-time request volume and latency heatmaps
+- Token consumption by customer tier
+- Escalation reasons distribution
+- Strike accumulation heatmap by item
+
+3. CIRCUIT BREAKERS & FAILURE MODES
+
+Pattern 1: Exponential Backoff with Jitter
+Current Implementation (graph.py):
+def call_gemini_with_retry(prompt, system_instruction, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return call_api()
+        except Exception as e:
+            if "429" in str(e):  # Rate limit
+                wait = (2 ** attempt) + random.uniform(0, 1)
+                time.sleep(wait)
+            elif attempt == max_retries - 1:
+                return {"decision": "Pending", "assigned_to": "Human_Vet"}
+
+Pattern 2: Graceful Degradation
+- If LLM fails → auto-escalate to Human Review (no silent failure)
+- If tool call fails → retry with state rollback
+- If database connection fails → fail-fast with clear error message
+
+Pattern 3: Human-in-the-Loop as Circuit Breaker
+- $700 threshold acts as a financial circuit breaker
+- 3-strike limit acts as a spam circuit breaker
+- Both exit the automated loop and require human intervention
+
+Production Circuit Breaker Configuration:
+from circuitbreaker import circuit
+
+@circuit(failure_threshold=5, recovery_timeout=60)
+def call_gemini_safe(prompt):
+    # After 5 failures, circuit opens
+    # All requests fail fast for 60 seconds
+    # Prevents cascading failures
+
+4. SCALABILITY CONSIDERATIONS
+
+Horizontal Scaling:
+- Stateless API layer (FastAPI + Uvicorn workers)
+- Stateful checkpointer (PostgreSQL) shared across workers
+- Redis for distributed rate limiting and cooldown tracking
+
+Expected Load Capacity:
+| Component | Single Instance | 5 Workers + PostgreSQL |
+|-----------|----------------|------------------------|
+| Requests/sec | 10 | 200+ |
+| Concurrent chats | 50 | 1000+ |
+| Latency p95 | 2s | 2.5s |
+
+Cost Projection (Gemini 2.5 Flash):
+- Input tokens: $0.075 / 1M
+- Output tokens: $0.30 / 1M
+- Estimated per request: 500 tokens → $0.00015
+- 100K requests/day → $15/day
